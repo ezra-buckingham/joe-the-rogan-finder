@@ -16,7 +16,7 @@ def send_notification(webhook_url, message):
 
 @click.command()
 @click.option('-d', '--date', required=True, help='''
-    Date to check for on the website (ex. October 23, 2023)
+    Date to check for on the website (ex. "Monday, Oct 23")
 ''')
 @click.option('-u', '--url', required=True, help='''
     Discord URL to notify when found
