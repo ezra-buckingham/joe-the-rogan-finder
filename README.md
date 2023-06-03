@@ -12,7 +12,7 @@ python3 -m pip install -r requirements.txt
 
 Usage is simple, even a dummy Willy Joe can use it!
 
-```
+```3
 Usage: main.py [OPTIONS]
 
 Options:

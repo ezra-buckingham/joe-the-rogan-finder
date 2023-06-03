@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 import json
 
+COUNT_THRESHOLD = 3
+
 def send_notification(webhook_url, message):
     
     data = {
@@ -13,20 +15,47 @@ def send_notification(webhook_url, message):
     response = requests.post(webhook_url, data=json.dumps(data), headers=headers)
     return response
 
+def add_count_to_found_joe(path):
+    # Get the current count from the file
+    path = Path(path)
+    current_count = int(path.read_text())
+    
+    # Delete the file
+    path.unlink()
+    
+    # Create the file and add the updated count
+    path.touch()
+    path.write_text(str(current_count + 1))
+    
 
 @click.command()
-@click.option('-d', '--date', required=True, help='''
+@click.option('-d', '--date', required=False, default=None, help='''
     Date to check for on the website (ex. "Monday, Oct 23")
+''')
+@click.option('-d', '--date_file', required=False, default=None, help='''
+    A file containing the dates to check for
 ''')
 @click.option('-u', '--url', required=True, help='''
     Discord URL to notify when found
 ''')
-def cli(date, url):
+def cli(date, date_file, url):
     
     # Create the path for the file to create if there was already a found item
-    found_file = Path('/tmp/joe-found')
-    if found_file.exists(): exit()
+    found_file = Path(__file__).joinpath('joe-found')
+    if found_file.exists(): 
+        
     
+    # Create the dates to check for array
+    dates_to_check = []
+    
+    # Add the dates to the array
+    if date_file:
+        date_file = Path(date_file)
+        if not date_file.exists(): raise FileNotFoundError(f'File not found at { str(date_file.absolute()) }')
+        dates_to_check = date_file.read_text().splitlines()
+    if date:
+        dates_to_check.append(date)
+
     # Send a GET request to the website
     url = 'https://comedymothership.com/shows'
     response = requests.get(url)
@@ -38,7 +67,7 @@ def cli(date, url):
     
     for current_date in date_elements:
         current_date = current_date.text.strip()
-        if not current_date == date: continue
+        if not current_date in dates_to_check: continue
         message = f'The date "{date}" was found on Joe Rogan\'s website!'
         send_notification(url, message)
         found_file.touch()

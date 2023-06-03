@@ -1,0 +1,27 @@
+---
+- name: Set up cron job for Python script
+  hosts: all
+
+  tasks:
+    - name: Copy Python script to server
+      copy:
+        src: "{{playboor_dir}}/../."  
+        dest: "/home/{{ ansible_user }}" 
+        recursive: yes
+
+    - name: Install Python dependencies
+      pip:
+        requirements: "/home/{{ ansible_user }}/joe-the-rogan-finder/requirements.txt"   # Replace with the actual path to your requirements.txt file
+        state: present
+
+    - name: Ensure cron directory exists
+      file:
+        path: /etc/cron.d
+        state: directory
+
+    - name: Create cron job
+      cron:
+        name: "Run Python script every 30 minutes"
+        minute: "*/30"
+        job: "python /path/on/server/your_script.py"  # Replace with the actual path to your Python script on the server
+        state: present
