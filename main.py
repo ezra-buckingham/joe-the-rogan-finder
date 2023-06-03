@@ -15,10 +15,19 @@ def send_notification(webhook_url, message):
     response = requests.post(webhook_url, data=json.dumps(data), headers=headers)
     return response
 
+
+def get_count_from_found_joe(path):
+    path = Path(path)
+    if not path.exists(): raise FileNotFoundError(f'File not found at { str(path.absolute()) }')
+    return int(path.read_text())
+
+
 def add_count_to_found_joe(path):
     # Get the current count from the file
     path = Path(path)
-    current_count = int(path.read_text())
+    path_contents = path.read_text()
+    if len(path_contents) == 0: current_count = 1
+    else: current_count = int(path_contents)
     
     # Delete the file
     path.unlink()
@@ -43,7 +52,8 @@ def cli(date, date_file, url):
     # Create the path for the file to create if there was already a found item
     found_file = Path(__file__).joinpath('joe-found')
     if found_file.exists(): 
-        
+        count = get_count_from_found_joe(found_file)
+        if count >= COUNT_THRESHOLD: exit()
     
     # Create the dates to check for array
     dates_to_check = []
@@ -70,7 +80,7 @@ def cli(date, date_file, url):
         if not current_date in dates_to_check: continue
         message = f'The date "{date}" was found on Joe Rogan\'s website!'
         send_notification(url, message)
-        found_file.touch()
+        add_count_to_found_joe(found_file)
 
 
 if __name__ == "__main__":
